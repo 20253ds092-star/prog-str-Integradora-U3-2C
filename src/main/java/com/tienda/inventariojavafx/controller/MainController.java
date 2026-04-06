@@ -50,7 +50,7 @@ public class MainController {
 
     @FXML
     public void agregarProducto() {
-        Producto nuevoProducto = mostrarDialogoProducto(null); // Abre ventanita vacía
+        Producto nuevoProducto = mostrarDialogoProducto(null);
         if (nuevoProducto != null) {
             listaObservable.add(nuevoProducto);
             repository.guardarProductos(listaObservable);
@@ -93,7 +93,7 @@ public class MainController {
         }
     }
 
-    // --- HERRAMIENTA: VENTANA EMERGENTE PARA CREAR/EDITAR ---
+
     private Producto mostrarDialogoProducto(Producto p) {
         Dialog<Producto> dialog = new Dialog<>();
         dialog.setTitle(p == null ? "Nuevo Producto" : "Editar Producto");

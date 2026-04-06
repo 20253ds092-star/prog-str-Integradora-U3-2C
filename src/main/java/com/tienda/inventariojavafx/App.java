@@ -10,7 +10,6 @@ import java.io.IOException;
 public class App extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        // Carga el archivo FXML que acabamos de crear
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("MainView.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 800, 500);
         stage.setTitle("Sistema de Inventario - Tiendita (Equipo 5)");

@@ -9,7 +9,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
-
 import java.util.Optional;
 
 public class MainController {
@@ -23,7 +22,6 @@ public class MainController {
 
     @FXML
     public void initialize() {
-        // 1. Configurar columnas (Asegúrate que los nombres coincidan con los atributos de tu clase Producto)
         TableColumn<Producto, String> colCodigo = (TableColumn<Producto, String>) tablaProductos.getColumns().get(0);
         colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
 
@@ -39,20 +37,13 @@ public class MainController {
         TableColumn<Producto, String> colCategoria = (TableColumn<Producto, String>) tablaProductos.getColumns().get(4);
         colCategoria.setCellValueFactory(new PropertyValueFactory<>("categoria"));
 
-        // 2. Cargar datos del repositorio
         listaObservable = FXCollections.observableArrayList(repository.cargarProductos());
-
-        // 3. Configurar la lista filtrada
         listaFiltrada = new FilteredList<>(listaObservable, p -> true);
-
-        // Importante: La tabla debe mostrar la lista filtrada
         tablaProductos.setItems(listaFiltrada);
 
-        // 4. Lógica del buscador en tiempo real
         txtBusqueda.textProperty().addListener((observable, oldValue, newValue) -> {
             listaFiltrada.setPredicate(producto -> {
                 if (newValue == null || newValue.isEmpty()) return true;
-
                 String filtro = newValue.toLowerCase();
                 return producto.getNombre().toLowerCase().contains(filtro) ||
                         producto.getCodigo().toLowerCase().contains(filtro);
@@ -64,12 +55,6 @@ public class MainController {
     public void agregarProducto() {
         Producto nuevo = mostrarDialogoProducto(null);
         if (nuevo != null) {
-            // Validar que el código no esté duplicado (Requisito 4.C)
-            boolean duplicado = listaObservable.stream().anyMatch(p -> p.getCodigo().equals(nuevo.getCodigo()));
-            if (duplicado) {
-                mostrarAlerta("Código duplicado", "Ya existe un producto con el código: " + nuevo.getCodigo());
-                return;
-            }
             listaObservable.add(nuevo);
             repository.guardarProductos(listaObservable);
         }
@@ -85,7 +70,6 @@ public class MainController {
                 seleccionado.setPrecio(editado.getPrecio());
                 seleccionado.setStock(editado.getStock());
                 seleccionado.setCategoria(editado.getCategoria());
-
                 tablaProductos.refresh();
                 repository.guardarProductos(listaObservable);
             }
@@ -97,13 +81,11 @@ public class MainController {
     @FXML
     public void eliminarProducto() {
         Producto seleccionado = tablaProductos.getSelectionModel().getSelectedItem();
-
         if (seleccionado != null) {
             Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
             alerta.setTitle("Confirmar Eliminación");
             alerta.setHeaderText("¿Eliminar " + seleccionado.getNombre() + "?");
             alerta.setContentText("Esta acción borrará el producto del inventario permanentemente.");
-
             Optional<ButtonType> resultado = alerta.showAndWait();
             if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
                 listaObservable.remove(seleccionado);
@@ -117,18 +99,18 @@ public class MainController {
     private Producto mostrarDialogoProducto(Producto p) {
         Dialog<Producto> dialog = new Dialog<>();
         dialog.setTitle(p == null ? "Nuevo Producto" : "Editar Producto");
-
         ButtonType btnGuardarType = new ButtonType("Guardar", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnGuardarType, ButtonType.CANCEL);
 
         GridPane grid = new GridPane();
-        grid.setHgap(10); grid.setVgap(10);
-
+        grid.setHgap(10); grid.setVgap(15);
         TextField txtCod = new TextField();
         TextField txtNom = new TextField();
         TextField txtPre = new TextField();
         TextField txtSto = new TextField();
-        TextField txtCat = new TextField();
+        ComboBox<String> comboCat = new ComboBox<>();
+        comboCat.getItems().addAll("Frituras", "Lácteos", "Bebidas", "Panadería", "Limpieza");
+        comboCat.setMaxWidth(Double.MAX_VALUE);
 
         if (p != null) {
             txtCod.setText(p.getCodigo());
@@ -136,36 +118,37 @@ public class MainController {
             txtNom.setText(p.getNombre());
             txtPre.setText(String.valueOf(p.getPrecio()));
             txtSto.setText(String.valueOf(p.getStock()));
-            txtCat.setText(p.getCategoria());
+            comboCat.setValue(p.getCategoria());
         }
 
         grid.add(new Label("Código:"), 0, 0); grid.add(txtCod, 1, 0);
         grid.add(new Label("Nombre:"), 0, 1); grid.add(txtNom, 1, 1);
         grid.add(new Label("Precio:"), 0, 2); grid.add(txtPre, 1, 2);
         grid.add(new Label("Stock:"), 0, 3);  grid.add(txtSto, 1, 3);
-        grid.add(new Label("Categoría:"), 0, 4); grid.add(txtCat, 1, 4);
-
+        grid.add(new Label("Categoría:"), 0, 4); grid.add(comboCat, 1, 4);
         dialog.getDialogPane().setContent(grid);
+
+        final Button btGuardar = (Button) dialog.getDialogPane().lookupButton(btnGuardarType);
+        btGuardar.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            try {
+                if (txtNom.getText().isEmpty() || Double.parseDouble(txtPre.getText()) <= 0 ||
+                        Integer.parseInt(txtSto.getText()) < 0 || comboCat.getValue() == null) {
+                    event.consume();
+                    mostrarAlerta("Datos inválidos", "Revisa los campos.");
+                }
+            } catch (Exception e) {
+                event.consume();
+                mostrarAlerta("Error", "Formato de números incorrecto.");
+            }
+        });
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == btnGuardarType) {
-                try {
-                    // Validaciones mínimas (Requisito 4.C)
-                    if(txtNom.getText().length() < 3) throw new Exception("Nombre muy corto");
-                    double precio = Double.parseDouble(txtPre.getText());
-                    int stock = Integer.parseInt(txtSto.getText());
-                    if(precio <= 0 || stock < 0) throw new Exception("Valores lógicos");
-
-                    return new Producto(txtCod.getText(), txtNom.getText(), precio, stock, txtCat.getText());
-                } catch (NumberFormatException e) {
-                    mostrarAlerta("Error de formato", "Precio y Stock deben ser números.");
-                } catch (Exception e) {
-                    mostrarAlerta("Validación", e.getMessage());
-                }
+                return new Producto(txtCod.getText(), txtNom.getText(),
+                        Double.parseDouble(txtPre.getText()), Integer.parseInt(txtSto.getText()), comboCat.getValue());
             }
             return null;
         });
-
         return dialog.showAndWait().orElse(null);
     }
 

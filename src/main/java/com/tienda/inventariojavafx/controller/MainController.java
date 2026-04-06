@@ -57,6 +57,7 @@ public class MainController {
         if (nuevo != null) {
             listaObservable.add(nuevo);
             repository.guardarProductos(listaObservable);
+        mostrarAlertaconfir("Listo", "Producto agregado correctamente");
         }
     }
 
@@ -72,6 +73,7 @@ public class MainController {
                 seleccionado.setCategoria(editado.getCategoria());
                 tablaProductos.refresh();
                 repository.guardarProductos(listaObservable);
+                mostrarAlertaconfir("Listo", "Producto editado correctamente");
             }
         } else {
             mostrarAlerta("Selección requerida", "Selecciona un producto para editar.");
@@ -91,6 +93,7 @@ public class MainController {
                 listaObservable.remove(seleccionado);
                 repository.guardarProductos(listaObservable);
             }
+            mostrarAlertaconfir("Listo", "Producto eliminado correctamente");
         } else {
             mostrarAlerta("Selección requerida", "Selecciona el producto que deseas eliminar.");
         }
@@ -159,4 +162,14 @@ public class MainController {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
+
+    private void mostrarAlertaconfir(String titulo, String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
+
+    }
+    
 }

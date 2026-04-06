@@ -2,13 +2,19 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import java.net.URL?>
 
 <VBox spacing="10" alignment="CENTER" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.tienda.inventariojavafx.controller.MainController">
+
+    <stylesheets>
+        <URL value="@style.css" />
+    </stylesheets>
+
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
-    <Label text="Inventario de Productos" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+    <Label text="Inventario de Productos" styleClass="label-header"/>
 
     <HBox spacing="10" alignment="CENTER_LEFT">
         <Label text="Buscar:"/>
@@ -26,8 +32,8 @@
     </TableView>
 
     <HBox spacing="15" alignment="CENTER">
-        <Button text="Nuevo Producto" onAction="#agregarProducto" style="-fx-background-color: #4c90af; -fx-text-fill: white;"/>
-        <Button text="Editar Seleccionado" onAction="#editarProducto" style="-fx-background-color: #d79a4b; -fx-text-fill: white;"/>
-        <Button text="Eliminar Seleccionado" onAction="#eliminarProducto" style="-fx-background-color: #F44336; -fx-text-fill: white;"/>
+        <Button text="Nuevo Producto" onAction="#agregarProducto" styleClass="btn-nuevo"/>
+        <Button text="Editar Seleccionado" onAction="#editarProducto" styleClass="btn-editar"/>
+        <Button text="Eliminar Seleccionado" onAction="#eliminarProducto" styleClass="btn-eliminar"/>
     </HBox>
 </VBox>

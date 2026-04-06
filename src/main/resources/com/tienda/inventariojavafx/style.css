@@ -1,0 +1,60 @@
+.root {
+    -fx-background-color: #f4f7f6;
+    -fx-padding: 20;
+}
+
+
+.label {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-text-fill: #2c3e50;
+}
+
+
+.table-view {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-color: #dcdde1;
+    -fx-border-radius: 8;
+}
+
+.table-view .column-header {
+    -fx-background-color: #2f3640;
+    -fx-padding: 8;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+
+.text-field {
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-padding: 8 15;
+    -fx-border-color: #3498db;
+}
+
+
+.button {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-background-radius: 5;
+    -fx-padding: 8 15;
+}
+
+.btn-nuevo {
+    -fx-background-color: #27ae60; /* Verde */
+}
+.btn-nuevo:hover { -fx-background-color: #2ecc71; }
+
+.btn-editar {
+    -fx-background-color: #f39c12; /* Naranja */
+}
+.btn-editar:hover { -fx-background-color: #f1c40f; }
+
+.btn-eliminar {
+    -fx-background-color: #c0392b; /* Rojo */
+}
+.btn-eliminar:hover { -fx-background-color: #e74c3c; }

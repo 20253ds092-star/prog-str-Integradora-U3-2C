@@ -7,7 +7,7 @@ public class Producto {
     private int stock;
     private String categoria;
 
-    // Constructor que recibe los 5 datos
+
     public Producto(String codigo, String nombre, double precio, int stock, String categoria) {
         this.codigo = codigo;
         this.nombre = nombre;

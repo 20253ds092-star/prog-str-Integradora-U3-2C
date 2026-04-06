@@ -1,0 +1,2 @@
+12457|papas|20.0|10|alimento
+45888|takis|20.0|100|abarrotes

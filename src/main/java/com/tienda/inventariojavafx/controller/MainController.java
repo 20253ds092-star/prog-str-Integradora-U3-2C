@@ -19,74 +19,75 @@ public class MainController {
 
     private ProductoRepository repository = new ProductoRepository();
     private ObservableList<Producto> listaObservable;
-    private FilteredList<Producto> listaFiltrada; // Lista especial para el buscador
+    private FilteredList<Producto> listaFiltrada;
 
     @FXML
     public void initialize() {
-        // 1. Configurar columnas
+
         ((TableColumn<Producto, String>) tablaProductos.getColumns().get(0)).setCellValueFactory(new PropertyValueFactory<>("codigo"));
         ((TableColumn<Producto, String>) tablaProductos.getColumns().get(1)).setCellValueFactory(new PropertyValueFactory<>("nombre"));
         ((TableColumn<Producto, Double>) tablaProductos.getColumns().get(2)).setCellValueFactory(new PropertyValueFactory<>("precio"));
         ((TableColumn<Producto, Integer>) tablaProductos.getColumns().get(3)).setCellValueFactory(new PropertyValueFactory<>("stock"));
         ((TableColumn<Producto, String>) tablaProductos.getColumns().get(4)).setCellValueFactory(new PropertyValueFactory<>("categoria"));
 
-        // 2. Cargar datos del txt
         listaObservable = FXCollections.observableArrayList(repository.cargarProductos());
 
-        // 3. Configurar la lista filtrada para el buscador
+
         listaFiltrada = new FilteredList<>(listaObservable, p -> true);
         tablaProductos.setItems(listaFiltrada);
 
-        // 4. Lógica del buscador: se activa cada vez que escribes algo en txtBusqueda
+
         txtBusqueda.textProperty().addListener((observable, oldValue, newValue) -> {
             listaFiltrada.setPredicate(producto -> {
-                if (newValue == null || newValue.isEmpty()) return true; // Si está vacío, muestra todo
+                if (newValue == null || newValue.isEmpty()) return true;
                 String lowerCaseFilter = newValue.toLowerCase();
-                // Busca por nombre o código
+
                 return producto.getNombre().toLowerCase().contains(lowerCaseFilter) ||
                         producto.getCodigo().toLowerCase().contains(lowerCaseFilter);
             });
         });
     }
 
-    // --- ACCIÓN: BOTÓN NUEVO PRODUCTO ---
     @FXML
     public void agregarProducto() {
         Producto nuevoProducto = mostrarDialogoProducto(null); // Abre ventanita vacía
         if (nuevoProducto != null) {
             listaObservable.add(nuevoProducto);
             repository.guardarProductos(listaObservable);
+            mostrarAlertaconfir("Listo", "Producto agregado exitosamente");
         }
     }
 
-    // --- ACCIÓN: BOTÓN EDITAR PRODUCTO ---
+
     @FXML
     public void editarProducto() {
         Producto seleccionado = tablaProductos.getSelectionModel().getSelectedItem();
         if (seleccionado != null) {
-            Producto productoEditado = mostrarDialogoProducto(seleccionado); // Abre ventanita con datos
+            Producto productoEditado = mostrarDialogoProducto(seleccionado);
             if (productoEditado != null) {
-                // Actualizamos los datos
+
                 seleccionado.setNombre(productoEditado.getNombre());
                 seleccionado.setPrecio(productoEditado.getPrecio());
                 seleccionado.setStock(productoEditado.getStock());
                 seleccionado.setCategoria(productoEditado.getCategoria());
 
-                tablaProductos.refresh(); // Refrescamos la tabla visualmente
-                repository.guardarProductos(listaObservable); // Guardamos en el txt
+                tablaProductos.refresh();
+                repository.guardarProductos(listaObservable);
+
             }
         } else {
             mostrarAlerta("Error", "Debes seleccionar un producto de la tabla para editarlo.");
         }
     }
 
-    // --- ACCIÓN: BOTÓN ELIMINAR PRODUCTO ---
+
     @FXML
     public void eliminarProducto() {
         Producto seleccionado = tablaProductos.getSelectionModel().getSelectedItem();
         if (seleccionado != null) {
             listaObservable.remove(seleccionado);
             repository.guardarProductos(listaObservable);
+            mostrarAlerta("Listo", "Producto eliminado exitosamente");
         } else {
             mostrarAlerta("Error", "Debes seleccionar un producto de la tabla para eliminarlo.");
         }
@@ -101,7 +102,7 @@ public class MainController {
         ButtonType btnGuardar = new ButtonType("Guardar", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnGuardar, ButtonType.CANCEL);
 
-        // Crear los campos de texto
+
         GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
         TextField txtCodigo = new TextField();
@@ -110,10 +111,10 @@ public class MainController {
         TextField txtStock = new TextField();
         TextField txtCategoria = new TextField();
 
-        // Si estamos editando, llenamos los campos con los datos actuales
+
         if (p != null) {
             txtCodigo.setText(p.getCodigo());
-            txtCodigo.setDisable(true); // No dejamos cambiar el código para no romper cosas
+            txtCodigo.setDisable(true);
             txtNombre.setText(p.getNombre());
             txtPrecio.setText(String.valueOf(p.getPrecio()));
             txtStock.setText(String.valueOf(p.getStock()));
@@ -128,12 +129,12 @@ public class MainController {
 
         dialog.getDialogPane().setContent(grid);
 
-        // Capturar los datos cuando el usuario le da a "Guardar"
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == btnGuardar) {
                 try {
                     return new Producto(txtCodigo.getText(), txtNombre.getText(),
                             Double.parseDouble(txtPrecio.getText()), Integer.parseInt(txtStock.getText()), txtCategoria.getText());
+
                 } catch (NumberFormatException e) {
                     mostrarAlerta("Error de formato", "Revisa que Precio y Stock sean números válidos.");
                     return null;
@@ -146,12 +147,20 @@ public class MainController {
         return result.orElse(null);
     }
 
-    // --- HERRAMIENTA: MOSTRAR ALERTAS ---
     private void mostrarAlerta(String titulo, String mensaje) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(titulo);
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
+
+    }
+    private void mostrarAlertaconfir(String titulo, String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
+
     }
 }

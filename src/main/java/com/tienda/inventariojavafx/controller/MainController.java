@@ -1,10 +1,11 @@
 package com.tienda.inventariojavafx.controller;
 
 import com.tienda.inventariojavafx.model.Producto;
-import com.tienda.inventariojavafx.repository.ProductoRepository;
+import com.tienda.inventariojavafx.ProductoService.ProductoService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -16,7 +17,7 @@ public class MainController {
     @FXML private TextField txtBusqueda;
     @FXML private TableView<Producto> tablaProductos;
 
-    private ProductoRepository repository = new ProductoRepository();
+    private ProductoService productoService = new ProductoService();
     private ObservableList<Producto> listaObservable;
     private FilteredList<Producto> listaFiltrada;
 
@@ -37,16 +38,20 @@ public class MainController {
         TableColumn<Producto, String> colCategoria = (TableColumn<Producto, String>) tablaProductos.getColumns().get(4);
         colCategoria.setCellValueFactory(new PropertyValueFactory<>("categoria"));
 
-        listaObservable = FXCollections.observableArrayList(repository.cargarProductos());
+        listaObservable = FXCollections.observableArrayList(productoService.obtenerProductos());
         listaFiltrada = new FilteredList<>(listaObservable, p -> true);
-        tablaProductos.setItems(listaFiltrada);
+
+        SortedList<Producto> listaOrdenada= new SortedList<>(listaFiltrada);
+        listaOrdenada.comparatorProperty().bind(tablaProductos.comparatorProperty());
+        tablaProductos.setItems(listaOrdenada);
 
         txtBusqueda.textProperty().addListener((observable, oldValue, newValue) -> {
             listaFiltrada.setPredicate(producto -> {
                 if (newValue == null || newValue.isEmpty()) return true;
                 String filtro = newValue.toLowerCase();
                 return producto.getNombre().toLowerCase().contains(filtro) ||
-                        producto.getCodigo().toLowerCase().contains(filtro);
+                        producto.getCodigo().toLowerCase().contains(filtro) ||
+                        producto.getCategoria().toLowerCase().contains(filtro);
             });
         });
     }
@@ -56,7 +61,8 @@ public class MainController {
         Producto nuevo = mostrarDialogoProducto(null);
         if (nuevo != null) {
             listaObservable.add(nuevo);
-            repository.guardarProductos(listaObservable);
+            productoService.guardarInventario(listaObservable);
+            mostrarAlertaconfir("Listo", "Producto agregado correctamente");
         }
     }
 
@@ -71,7 +77,9 @@ public class MainController {
                 seleccionado.setStock(editado.getStock());
                 seleccionado.setCategoria(editado.getCategoria());
                 tablaProductos.refresh();
-                repository.guardarProductos(listaObservable);
+
+                productoService.guardarInventario(listaObservable);
+                mostrarAlertaconfir("Listo", "Producto editado correctamente");
             }
         } else {
             mostrarAlerta("Selección requerida", "Selecciona un producto para editar.");
@@ -89,7 +97,8 @@ public class MainController {
             Optional<ButtonType> resultado = alerta.showAndWait();
             if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
                 listaObservable.remove(seleccionado);
-                repository.guardarProductos(listaObservable);
+                productoService.guardarInventario(listaObservable);
+                mostrarAlertaconfir("Listo", "Producto eliminado correctamente");
             }
         } else {
             mostrarAlerta("Selección requerida", "Selecciona el producto que deseas eliminar.");
@@ -129,31 +138,51 @@ public class MainController {
         dialog.getDialogPane().setContent(grid);
 
         final Button btGuardar = (Button) dialog.getDialogPane().lookupButton(btnGuardarType);
+
         btGuardar.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
             try {
-                if (txtNom.getText().isEmpty() || Double.parseDouble(txtPre.getText()) <= 0 ||
-                        Integer.parseInt(txtSto.getText()) < 0 || comboCat.getValue() == null) {
-                    event.consume();
-                    mostrarAlerta("Datos inválidos", "Revisa los campos.");
-                }
-            } catch (Exception e) {
+                String cod = txtCod.getText().trim();
+                String nom = txtNom.getText().trim();
+                String cat = comboCat.getValue();
+
+                double pre = Double.parseDouble(txtPre.getText().trim());
+                int sto = Integer.parseInt(txtSto.getText().trim());
+
+                Producto productoTemporal = new Producto(cod, nom, pre, sto, cat);
+
+                boolean esNuevo = (p == null);
+                productoService.validarProducto(productoTemporal, esNuevo, listaObservable);
+
+            } catch (NumberFormatException e) {
                 event.consume();
-                mostrarAlerta("Error", "Formato de números incorrecto.");
+                mostrarAlerta("Formato incorrecto", "El precio y el stock deben ser números válidos. No dejes estos campos vacíos.");
+            } catch (IllegalArgumentException e) {
+                event.consume();
+                mostrarAlerta("Datos inválidos", e.getMessage());
             }
         });
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == btnGuardarType) {
-                return new Producto(txtCod.getText(), txtNom.getText(),
-                        Double.parseDouble(txtPre.getText()), Integer.parseInt(txtSto.getText()), comboCat.getValue());
+                return new Producto(txtCod.getText().trim(), txtNom.getText().trim(),
+                        Double.parseDouble(txtPre.getText().trim()), Integer.parseInt(txtSto.getText().trim()), comboCat.getValue());
             }
             return null;
         });
+
         return dialog.showAndWait().orElse(null);
     }
 
     private void mostrarAlerta(String titulo, String mensaje) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
+    }
+
+    private void mostrarAlertaconfir(String titulo, String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(titulo);
         alert.setHeaderText(null);
         alert.setContentText(mensaje);

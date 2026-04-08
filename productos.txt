@@ -1,1 +1,6 @@
-007|papas|20.0|3|frituras
+007|papass|20.0|3|frituras
+21515|abas|12.0|25|Frituras
+551|carne seca|150.0|0|Lácteos
+8111|fabuloso|18.0|60|Limpieza
+5151|takis|20.0|100|Frituras
+1555|coca|20.0|50|Bebidas

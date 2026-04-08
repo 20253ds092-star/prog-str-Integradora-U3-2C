@@ -7,7 +7,7 @@ public class Producto {
     private int stock;
     private String categoria;
 
-    // Constructor que recibe los 5 datos
+
     public Producto(String codigo, String nombre, double precio, int stock, String categoria) {
         this.codigo = codigo;
         this.nombre = nombre;
@@ -15,6 +15,7 @@ public class Producto {
         this.stock = stock;
         this.categoria = categoria;
     }
+
 
     public String getCodigo() { return codigo; }
     public String getNombre() { return nombre; }
@@ -27,6 +28,7 @@ public class Producto {
     public void setPrecio(double precio) { this.precio = precio; }
     public void setStock(int stock) { this.stock = stock; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
+
 
     @Override
     public String toString() {

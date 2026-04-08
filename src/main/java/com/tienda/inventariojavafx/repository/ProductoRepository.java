@@ -8,7 +8,9 @@ import java.util.List;
 
 public class ProductoRepository {
 
+
     private final String ARCHIVO = "productos.txt";
+
 
     public List<Producto> cargarProductos() {
         List<Producto> lista = new ArrayList<>();
@@ -38,6 +40,7 @@ public class ProductoRepository {
         }
         return lista;
     }
+
 
     public void guardarProductos(ObservableList<Producto> productos) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(ARCHIVO))) {

@@ -50,8 +50,7 @@ public class MainController {
             listaFiltrada.setPredicate(producto -> {
                 if (newValue == null || newValue.isEmpty()) return true;
                 String filtro = newValue.toLowerCase();
-                return producto.getNombre().toLowerCase().contains(filtro) ||
-                        producto.getCodigo().toLowerCase().contains(filtro);
+                return producto.getNombre().toLowerCase().contains(filtro) || producto.getCodigo().toLowerCase().contains(filtro) || producto.getCategoria().toLowerCase().contains(filtro);
             });
         });
     }

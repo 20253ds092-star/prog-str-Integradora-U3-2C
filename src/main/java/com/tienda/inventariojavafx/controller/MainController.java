@@ -1,7 +1,7 @@
 package com.tienda.inventariojavafx.controller;
 
 import com.tienda.inventariojavafx.model.Producto;
-import com.tienda.inventariojavafx.repository.ProductoRepository;
+import com.tienda.inventariojavafx.ProductoService.ProductoService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -17,7 +17,7 @@ public class MainController {
     @FXML private TextField txtBusqueda;
     @FXML private TableView<Producto> tablaProductos;
 
-    private ProductoRepository repository = new ProductoRepository();
+    private ProductoService productoService = new ProductoService();
     private ObservableList<Producto> listaObservable;
     private FilteredList<Producto> listaFiltrada;
 
@@ -38,10 +38,9 @@ public class MainController {
         TableColumn<Producto, String> colCategoria = (TableColumn<Producto, String>) tablaProductos.getColumns().get(4);
         colCategoria.setCellValueFactory(new PropertyValueFactory<>("categoria"));
 
-        listaObservable = FXCollections.observableArrayList(repository.cargarProductos());
+        listaObservable = FXCollections.observableArrayList(productoService.obtenerProductos());
         listaFiltrada = new FilteredList<>(listaObservable, p -> true);
-        listaObservable=FXCollections.observableArrayList(repository.cargarProductos());
-        listaFiltrada=new FilteredList<>(listaObservable, p -> true);
+
         SortedList<Producto> listaOrdenada= new SortedList<>(listaFiltrada);
         listaOrdenada.comparatorProperty().bind(tablaProductos.comparatorProperty());
         tablaProductos.setItems(listaOrdenada);
@@ -50,7 +49,9 @@ public class MainController {
             listaFiltrada.setPredicate(producto -> {
                 if (newValue == null || newValue.isEmpty()) return true;
                 String filtro = newValue.toLowerCase();
-                return producto.getNombre().toLowerCase().contains(filtro) || producto.getCodigo().toLowerCase().contains(filtro) || producto.getCategoria().toLowerCase().contains(filtro);
+                return producto.getNombre().toLowerCase().contains(filtro) ||
+                        producto.getCodigo().toLowerCase().contains(filtro) ||
+                        producto.getCategoria().toLowerCase().contains(filtro);
             });
         });
     }
@@ -60,8 +61,8 @@ public class MainController {
         Producto nuevo = mostrarDialogoProducto(null);
         if (nuevo != null) {
             listaObservable.add(nuevo);
-            repository.guardarProductos(listaObservable);
-        mostrarAlertaconfir("Listo", "Producto agregado correctamente");
+            productoService.guardarInventario(listaObservable);
+            mostrarAlertaconfir("Listo", "Producto agregado correctamente");
         }
     }
 
@@ -76,7 +77,8 @@ public class MainController {
                 seleccionado.setStock(editado.getStock());
                 seleccionado.setCategoria(editado.getCategoria());
                 tablaProductos.refresh();
-                repository.guardarProductos(listaObservable);
+
+                productoService.guardarInventario(listaObservable);
                 mostrarAlertaconfir("Listo", "Producto editado correctamente");
             }
         } else {
@@ -95,9 +97,9 @@ public class MainController {
             Optional<ButtonType> resultado = alerta.showAndWait();
             if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
                 listaObservable.remove(seleccionado);
-                repository.guardarProductos(listaObservable);
+                productoService.guardarInventario(listaObservable);
+                mostrarAlertaconfir("Listo", "Producto eliminado correctamente");
             }
-            mostrarAlertaconfir("Listo", "Producto eliminado correctamente");
         } else {
             mostrarAlerta("Selección requerida", "Selecciona el producto que deseas eliminar.");
         }
@@ -136,59 +138,38 @@ public class MainController {
         dialog.getDialogPane().setContent(grid);
 
         final Button btGuardar = (Button) dialog.getDialogPane().lookupButton(btnGuardarType);
+
         btGuardar.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
-            String codigo = txtCod.getText().trim();
-            String nombre = txtNom.getText().trim();
-            String precio = txtPre.getText().trim();
-            String stock = txtSto.getText().trim();
-            String categoria = comboCat.getValue();
-
-            if (codigo.isEmpty() || nombre.isEmpty() || precio.isEmpty() || stock.isEmpty() || categoria == null) {
-                event.consume();
-                mostrarAlerta("Campos vacios", "Todos los campos son obligatorios.");
-                return;
-            }
-            if (nombre.length() < 3) {
-                event.consume();
-                mostrarAlerta("Nombre invalido", "El nombre del producto debe tener almenos 3 caracteres.");
-                return;
-            }
-            if (p == null) {
-                boolean codigpDuplicado = listaObservable.stream().anyMatch(producto -> producto.getCodigo().equals(codigo));
-                if (codigpDuplicado) {
-                    event.consume();
-                    mostrarAlerta("Codigo duplicado", "El codigo ´" + codigo + "´ ya existe en el inventario.");
-                    return;
-                }
-            }
-
             try {
-                double Precio = Double.parseDouble(precio);
-                int Stock = Integer.parseInt(stock);
-                if (Precio <= 0) {
-                    event.consume();
-                    mostrarAlerta("Precio invalido", "El precio debe ser mayor a 0");
-                    return;
-                }
-                if (Stock < 0) {
-                    event.consume();
-                    mostrarAlerta("Stock invalido", "El stock no puede ser un negativo.");
-                    return;
-                }
+                String cod = txtCod.getText().trim();
+                String nom = txtNom.getText().trim();
+                String cat = comboCat.getValue();
+
+                double pre = Double.parseDouble(txtPre.getText().trim());
+                int sto = Integer.parseInt(txtSto.getText().trim());
+
+                Producto productoTemporal = new Producto(cod, nom, pre, sto, cat);
+
+                boolean esNuevo = (p == null);
+                productoService.validarProducto(productoTemporal, esNuevo, listaObservable);
 
             } catch (NumberFormatException e) {
                 event.consume();
-                mostrarAlerta("Formato incorrecto", "El precio y el stock deben ser numeros validos.");
+                mostrarAlerta("Formato incorrecto", "El precio y el stock deben ser números válidos. No dejes estos campos vacíos.");
+            } catch (IllegalArgumentException e) {
+                event.consume();
+                mostrarAlerta("Datos inválidos", e.getMessage());
             }
         });
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == btnGuardarType) {
-                return new Producto(txtCod.getText(), txtNom.getText(),
-                        Double.parseDouble(txtPre.getText()), Integer.parseInt(txtSto.getText()), comboCat.getValue());
+                return new Producto(txtCod.getText().trim(), txtNom.getText().trim(),
+                        Double.parseDouble(txtPre.getText().trim()), Integer.parseInt(txtSto.getText().trim()), comboCat.getValue());
             }
             return null;
         });
+
         return dialog.showAndWait().orElse(null);
     }
 
@@ -206,7 +187,5 @@ public class MainController {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
-
     }
-    
 }

@@ -179,7 +179,7 @@ public class MainController {
 
             } catch (NumberFormatException e) {
                 event.consume();
-                mostrarAlerta("Doemato incorrecto", "El precio y el stock deben ser numeros validos.");
+                mostrarAlerta("Formato incorrecto", "El precio y el stock deben ser numeros validos.");
             }
         });
 

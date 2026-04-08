@@ -1,2 +1,3 @@
 007|papass|20.0|3|frituras
 21515|abas|12.0|25|Frituras
+551|carne seca|150.0|0|Lácteos

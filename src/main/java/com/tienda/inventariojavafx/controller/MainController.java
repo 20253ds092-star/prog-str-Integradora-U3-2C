@@ -138,15 +138,48 @@ public class MainController {
 
         final Button btGuardar = (Button) dialog.getDialogPane().lookupButton(btnGuardarType);
         btGuardar.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
-            try {
-                if (txtNom.getText().isEmpty() || Double.parseDouble(txtPre.getText()) <= 0 ||
-                        Integer.parseInt(txtSto.getText()) < 0 || comboCat.getValue() == null) {
-                    event.consume();
-                    mostrarAlerta("Datos inválidos", "Revisa los campos.");
-                }
-            } catch (Exception e) {
+            String codigo = txtCod.getText().trim();
+            String nombre = txtNom.getText().trim();
+            String precio = txtPre.getText().trim();
+            String stock = txtSto.getText().trim();
+            String categoria = comboCat.getValue();
+
+            if (codigo.isEmpty() || nombre.isEmpty() || precio.isEmpty() || stock.isEmpty() || categoria == null) {
                 event.consume();
-                mostrarAlerta("Error", "Formato de números incorrecto.");
+                mostrarAlerta("Campos vacios", "Todos los campos son obligatorios.");
+                return;
+            }
+            if (nombre.length() < 3) {
+                event.consume();
+                mostrarAlerta("Nombre invalido", "El nombre del producto debe tener almenos 3 caracteres.");
+                return;
+            }
+            if (p == null) {
+                boolean codigpDuplicado = listaObservable.stream().anyMatch(producto -> producto.getCodigo().equals(codigo));
+                if (codigpDuplicado) {
+                    event.consume();
+                    mostrarAlerta("Codigo duplicado", "El codigo ´" + codigo + "´ ya existe en el inventario.");
+                    return;
+                }
+            }
+
+            try {
+                double Precio = Double.parseDouble(precio);
+                int Stock = Integer.parseInt(stock);
+                if (Precio <= 0) {
+                    event.consume();
+                    mostrarAlerta("Precio invalido", "El precio debe ser mayor a 0");
+                    return;
+                }
+                if (Stock < 0) {
+                    event.consume();
+                    mostrarAlerta("Stock invalido", "El stock no puede ser un negativo.");
+                    return;
+                }
+
+            } catch (NumberFormatException e) {
+                event.consume();
+                mostrarAlerta("Doemato incorrecto", "El precio y el stock deben ser numeros validos.");
             }
         });
 

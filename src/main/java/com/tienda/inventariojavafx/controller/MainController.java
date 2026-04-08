@@ -5,6 +5,7 @@ import com.tienda.inventariojavafx.repository.ProductoRepository;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -39,7 +40,11 @@ public class MainController {
 
         listaObservable = FXCollections.observableArrayList(repository.cargarProductos());
         listaFiltrada = new FilteredList<>(listaObservable, p -> true);
-        tablaProductos.setItems(listaFiltrada);
+        listaObservable=FXCollections.observableArrayList(repository.cargarProductos());
+        listaFiltrada=new FilteredList<>(listaObservable, p -> true);
+        SortedList<Producto> listaOrdenada= new SortedList<>(listaFiltrada);
+        listaOrdenada.comparatorProperty().bind(tablaProductos.comparatorProperty());
+        tablaProductos.setItems(listaOrdenada);
 
         txtBusqueda.textProperty().addListener((observable, oldValue, newValue) -> {
             listaFiltrada.setPredicate(producto -> {
